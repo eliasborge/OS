@@ -21,7 +21,7 @@ int main(void) {
 
     int socketfd, newsocketfd;
     socklen_t clilen;
-    struct  sockaddr_in server_address, client_address;
+    struct sockaddr_in server_address, client_address;
     int n;
     socketfd = socket(PF_INET, SOCK_STREAM, 0);
     if (socketfd < 0) {
