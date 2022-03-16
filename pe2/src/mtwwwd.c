@@ -9,10 +9,13 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <sem.h>
 
 
 char buffer[MAXREQ] , body[MAXREQ] , msg[MAXREQ] ;
 void error(const char *msg) { perror(msg) ; exit(1); }
+
+
 
 int main(void) {
 
