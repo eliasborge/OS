@@ -3,7 +3,7 @@
 #include <pthread.h>
 #include <errno.h>
 #include <stdlib.h>
-#include <stdio.h> 
+ #include <stdio.h> 
 
 SEM sem = sem_init(2);
 
@@ -26,11 +26,11 @@ SEM *sem_init(int initVal) {
 
     errno = pthread_mutex_init(&sem->m, NULL);
     if (!errno)
-       goto Error2;
+        goto Error2;
 
     errno = pthread_cond_init(&sem->c, NULL);
     if (!errno)
-       goto Error3;
+        goto Error3;
 
     return sem;
 

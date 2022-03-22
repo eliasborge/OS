@@ -9,11 +9,17 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <pthread.h>
-#include <sem.h>
+#include "sem.h"
 
 
 char buffer[MAXREQ] , body[MAXREQ] , msg[MAXREQ] ;
 void error(const char *msg) { perror(msg) ; exit(1); }
+char wwwp[MAXREQ];
+char wwwph[1024];
+int port;
+int threads;
+int buffs;
+FILE *filepath;
 
 
 
@@ -47,21 +53,38 @@ int main(void) {
         bzero(buffer, sizeof(buffer));
         n = read (newsocketfd,buffer,sizeof(buffer) - 1);
         if (n < 0) error("ERROR reading from socket");
-    
-    
-        snprintf (body, sizeof (body),
-        "<html>\n<bodt>\n"
-        "<h1>Welcome to this web browser</h1> \n<h2>Have fun</h2>\n"
-        "\nYour request was \n"
-        "<pre>%s</pre>\n"
-        "</body>\n</html>\n",buffer);
+
+        printf("Before: %s\n",wwwp);
+        strcpy(wwwp,wwwph);
+        printf("After: %s\n",wwwp);
+
+        strtok(buffer, " ");
+        strcat(wwwp,strtok(NULL, ' '));
+
+        filepath = fopen(wwwp,"r");
+        printf("%s\n",wwwp);
+
+        if(filepath != NULL){
+            size_t newLength = fread(body, sizeof(char), MAXREQ, filepath);
+
+            snprintf (body, sizeof (body),
+            "<html>\n<bodt>\n"
+            "<h1>Welcome to this web browser</h1> \n<h2>Have fun</h2>\n"
+            "\nYour request was \n"
+            "<pre>%s</pre>\n"
+            "</body>\n</html>\n",buffer);
         
-        snprintf(msg, sizeof(msg), 
-        "HTTP/1.0 200 OK\n"
-        "Content-Type: text/html\n"
-        "Content-Length: %lu\n\n%s", strlen (body), body);
-        n = write (newsocketfd,msg,strlen(msg));
-        if(n<0) error("Error writing to socket");
+            fputs("Error reading from file\n",stderr);
+            strcpy(body,"404 Not Found \n");
+            snprintf(msg, sizeof(msg), 
+            "HTTP/1.0 200 OK\n"
+            "Content-Type: text/html\n"
+            "Content-Length: %lu\n\n%s", strlen (body), body);
+            n = write (newsocketfd,msg,strlen(msg));
+            if(n<0) error("Error writing to socket");
+            
+        }
+    
         close (newsocketfd);
     
     }
