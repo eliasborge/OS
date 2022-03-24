@@ -26,33 +26,6 @@ void error(const char* msg){
     exit(1);
 }
 
-void dest(char *buff, char *addr_buff){
-    int i = 0;
-    int condition = 0;
-    int j = 0;
-    while(1){
-        if (buff[j] == '\n' || buff[j] == '\r'){
-            addr_buff[i+1] = '\0';
-            break;
-        }
-
-        if(condition == 0 && buff[j] == ' '){
-            j++;
-            condition = 1;
-        }
-        if(condition == 1){
-            if (buff[j]== ' '){
-                addr_buff[i+1] = '\0';
-                break;
-            }
-            addr_buff[i] = buff[j];
-            i++;
-        }
-        j++;
-    }
-
-    return;
-}
 
 void arguments(int argc, char*argv[]) {
     if(argc < 5) {
@@ -97,6 +70,7 @@ void *request() {
         snprintf(body, sizeof(body),
         "<html>\n<body>\n<h1>Hello web browser</h1>Your request was\n<pre>%s</pre>\n</body>\n</html>\n", buff);
 
+        //https://stackoverflow.com/questions/53417494/checking-if-a-text-file-is-empty
         bzero(addr_buff, sizeof(addr_buff));
         dest(buff, addr_buff);
         
@@ -144,6 +118,37 @@ void *request() {
         close(newsockfd);
         
     }       
+}
+
+void dest(char *buff, char *addr_buff){
+    int counter1 = 0;
+    int counter2 = 0;
+    int h = 0;
+    while(1){
+        if (buff[counter2] == '\n' || buff[counter2] == '\r'){
+            addr_buff[counter1+1] = '\0';
+            printf(addr_buff);
+            break;
+        }
+
+        if(h == 0 && buff[counter2] == ' '){
+            counter2++;
+            h = 1;
+        }
+        if(h == 1){
+            if (buff[counter2]== ' '){
+                addr_buff[counter1+1] = '\0';
+                printf(addr_buff);
+                break;
+            }
+            addr_buff[counter1] = buff[counter2];
+            printf(addr_buff);
+            counter1++;
+        }
+        counter2++;
+    }
+
+    return;
 }
 
 int main(int argc, char *argv[]){
