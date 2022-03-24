@@ -55,6 +55,26 @@ int sem_del(SEM *sem){
 
 
 
+void signal(SEM *sem){
+    /* V (signal) operation.
+    *
+    * Increments the semaphore value by 1 and notifies P operations that are 
+    * blocked on the semaphore of the change.
+    *
+    * Parameters:
+    *
+    * sem           handle of the semaphore to increment
+    */
+    pthread_mutex_lock(&sem->mutex);
+    sem->count ++;
+    if(sem->count == 1 ) {
+        //Unlocks one of the threads
+        pthread_cond_signal(&sem->conditional);
+    }
+    pthread_mutex_unlock(&sem->mutex);
+    return;
+}
+
 void wait(SEM *sem){
     /* P (wait) operation.
     * 
@@ -73,26 +93,6 @@ void wait(SEM *sem){
 
     sem->count --;
 
-    pthread_mutex_unlock(&sem->mutex);
-    return;
-}
-
-void signal(SEM *sem){
-    /* V (signal) operation.
-    *
-    * Increments the semaphore value by 1 and notifies P operations that are 
-    * blocked on the semaphore of the change.
-    *
-    * Parameters:
-    *
-    * sem           handle of the semaphore to increment
-    */
-    pthread_mutex_lock(&sem->mutex);
-    sem->count ++;
-    if(sem->count == 1 ) {
-        //Unlocks one of the threads
-        pthread_cond_signal(&sem->conditional);
-    }
     pthread_mutex_unlock(&sem->mutex);
     return;
 }

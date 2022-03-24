@@ -25,101 +25,6 @@ void error(const char* msg){
     perror(msg);
     exit(1);
 }
-
-
-void arguments(int argc, char*argv[]) {
-    if(argc < 5) {
-        
-        wwwp = getenv("PWD");
-        strcat(wwwp, "/pages");
-        port = 6789;
-        if(argc == 2) {
-            port = atoi(argv[1]);
-        }
-        threads = 50;
-        buffers = 50;
-    } else {
-        wwwp = argv[1];
-        port = atoi(argv[2]);
-        threads = atoi(argv[3]);
-        buffers = atoi(argv[4]);
-    }
-}
-
-//For å håndtere requests som kommer
-void *request() {
-    char addr_buff[256];
-    char tot_addr[256];
-    int errorNum = 0;
-    int n;
-    int newsockfd;
-
-    FILE *file;
-    while(1) {
-        newsockfd = bb_get(bb);
-        if(newsockfd < 0){
-            error("ERROR on accept");
-        }
-        bzero(buff, sizeof(buff));
-        n = read(newsockfd, buff, sizeof(buff)-1);
-        
-        if(n < 0){
-            error("ERROR reading from socket");
-        }
-
-        snprintf(body, sizeof(body),
-        "<html>\n<body>\n<h1>Hello web browser</h1>Your request was\n<pre>%s</pre>\n</body>\n</html>\n", buff);
-
-        //https://stackoverflow.com/questions/53417494/checking-if-a-text-file-is-empty
-        bzero(addr_buff, sizeof(addr_buff));
-        dest(buff, addr_buff);
-        
-        strcpy(tot_addr, wwwp);
-        strcat(tot_addr, addr_buff);
-    
-        char * f_buff = 0;
-        long l;
-        
-        
-        FILE * filepath = fopen (tot_addr, "r+");
-        if (filepath == NULL ){
-            strcpy(tot_addr, wwwp);
-            strcat(tot_addr, "/error.html");
-            filepath = fopen (tot_addr, "rb");
-            errorNum = 1;
-        }
-        errorNum = 0;
-        fseek (filepath, 0, SEEK_END);
-        l = ftell (filepath);
-        fseek (filepath, 0, SEEK_SET);
-        f_buff = malloc (l);
-        if (f_buff)
-            {
-                fread (f_buff, 1, l, filepath);
-            }
-        fclose (filepath);
-
-        bzero(tot_addr, sizeof(tot_addr));
-        if(errorNum == 0) {
-            snprintf(message, sizeof(message),
-            "HTTP/1.0 200 OK\n Content-Type: text/html\n Content-Length: %lu\n\n%s", strlen(f_buff), f_buff);
-        } else {
-            snprintf(message, sizeof(message),
-            "HTTP/1.0 404 Not found\n Content-Type: text/html\n Content-Length: %lu\n\n%s", strlen(f_buff), f_buff);
-        }
-
-        n = write(newsockfd, message, strlen(message));
-        
-
-        if (n<0){
-            error("ERROR writing to socket");
-        }
-
-        close(newsockfd);
-        
-    }       
-}
-
 void dest(char *buff, char *addr_buff){
     int counter1 = 0;
     int counter2 = 0;
@@ -151,12 +56,115 @@ void dest(char *buff, char *addr_buff){
     return;
 }
 
+
+
+void arguments(int argc, char*argv[]) {
+    if(argc < 5) {
+        
+        wwwp = getenv("PWD");
+        strcat(wwwp, "/pages");
+        port = 6789;
+        if(argc == 2) {
+            port = atoi(argv[1]);
+        }
+        threads = 50;
+        buffers = 50;
+    } else {
+        wwwp = argv[1];
+        port = atoi(argv[2]);
+        threads = atoi(argv[3]);
+        buffers = atoi(argv[4]);
+    }
+}
+
+//For å håndtere requests som kommer inn
+void *request() {
+    char addr_buff[256];
+    char tot_addr[256];
+    int errorNum = 0;
+    int n;
+    int newsockfd;
+
+    FILE *file;
+    while(1) {
+        newsockfd = bb_get(bb);
+        int socket;
+        if(newsockfd < 0){
+            error("ERROR on accept");
+        }
+        bzero(buff, sizeof(buff));
+        n = read(newsockfd, buff, sizeof(buff)-1);
+        socket = n;
+        if(n < 0){
+            error("ERROR reading from socket");
+        }
+        socket=0;
+        snprintf(body, sizeof(body),
+        "<html>\n<body>\n<h1>Hello web browser</h1>Your request was\n<pre>%s</pre>\n</body>\n</html>\n", buff);
+
+        //https://stackoverflow.com/questions/53417494/checking-if-a-text-file-is-empty
+        bzero(addr_buff, sizeof(addr_buff));
+        dest(buff, addr_buff);
+        
+        strcpy(tot_addr, wwwp);
+        strcat(tot_addr, addr_buff);
+
+        char * f_buff = 0;
+        long l;
+        
+        
+        FILE * filepath = fopen (tot_addr, "r+");
+        if (filepath == NULL ){
+            strcpy(tot_addr, wwwp);
+            strcat(tot_addr, "/error.html");
+            errorNum=1;
+            filepath = fopen (tot_addr, "rb");
+            errorNum = 1;
+        }
+        char * rbuff;
+        errorNum = 0;
+        fseek (filepath, 0, SEEK_END);
+        l = ftell (filepath);
+        fseek (filepath, 0, SEEK_SET);
+        f_buff = malloc (l);
+        if (f_buff)
+            {
+                fread (f_buff, 1, l, filepath);
+            }
+        fclose (filepath);
+        int closed = -1;
+        bzero(tot_addr, sizeof(tot_addr));
+        if(errorNum == 0) {
+            snprintf(message, sizeof(message),
+            "HTTP/1.0 200 OK\n Content-Type: text/html\n Content-Length: %lu\n\n%s", strlen(f_buff), f_buff);
+        } else {
+            snprintf(message, sizeof(message),
+            "HTTP/1.0 404 Not found\n Content-Type: text/html\n Content-Length: %lu\n\n%s", strlen(f_buff), f_buff);
+        }
+        //Prints done
+        //Check write 
+        n = write(newsockfd, message, strlen(message));
+        
+
+        if (n<0){
+            error("ERROR writing to socket");
+        }
+        //CLOSE
+        close(newsockfd);
+        
+    }       
+}
+
+
 int main(int argc, char *argv[]){
     
+    //What does this do? Found on stack overflow.
     arguments(argc, argv);
 
+    //create threads
     pthread_t t[threads];
     int temp_arg[threads];
+    int j = 0;
     bb = bb_init(buffers);
 
     int sockfd, newsockfd;
@@ -178,9 +186,12 @@ int main(int argc, char *argv[]){
         temp_arg[i] = i;
         int result = pthread_create(&t[i], NULL, &request, &temp_arg[i]);
         i++;
+        j++;
     }
     listen(sockfd, 5);
-    
+    if(j<50){
+        int sock = 2;
+    }
     while(1){
         clilen = sizeof(cli_addr);
         newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);

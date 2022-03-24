@@ -14,7 +14,7 @@ typedef struct BNDBUF {
 
 BNDBUF *bb_init(unsigned int size){
 
-    //Initialize buffer
+    //Initialize bufferhttps://stackoverflow.com/questions/53417494/checking-if-a-text-file-is-empty
     BNDBUF *bb = malloc(sizeof(BNDBUF));
     bb->inp = 0;
     bb->outp = 0;
