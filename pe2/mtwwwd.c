@@ -9,6 +9,7 @@
 #include "bbuffer.h"
 #include <pthread.h>
 
+//Used lecture 11 in OS as a source
 
 #define MAXREQ (4096*1024)
 
@@ -25,6 +26,8 @@ void error(const char* msg){
     perror(msg);
     exit(1);
 }
+
+//finding the needed destination
 void dest(char *buff, char *addr_buff){
     int counter1 = 0;
     int counter2 = 0;
@@ -121,6 +124,7 @@ void *request() {
             filepath = fopen (tot_addr, "rb");
             errorNum = 1;
         }
+        //reading a fil; https://stackoverflow.com/questions/70767909/reading-a-file-and-print-the-content-in-c
         char * rbuff;
         errorNum = 0;
         fseek (filepath, 0, SEEK_END);
@@ -155,6 +159,8 @@ void *request() {
     }       
 }
 
+// https://www.geeksforgeeks.org/multithreaded-servers-in-java/#:~:text=Multithreaded%20Server%3A%20A%20server%20having,clients%20at%20the%20same%20time.
+// https://www.educative.io/edpresso/how-to-implement-tcp-sockets-in-c
 
 int main(int argc, char *argv[]){
     
