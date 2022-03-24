@@ -32,17 +32,22 @@ void dest(char *buff, char *addr_buff){
     int counter1 = 0;
     int counter2 = 0;
     int h = 0;
+
+    //Loop that runs until broken
     while(1){
+
+        //Increments address buffer if conditional is met.
         if (buff[counter2] == '\n' || buff[counter2] == '\r'){
             addr_buff[counter1+1] = '\0';
             printf(addr_buff);
             break;
         }
-
+        //Increments counter
         if(h == 0 && buff[counter2] == ' '){
             counter2++;
             h = 1;
         }
+        //Sets buffer at desired index
         if(h == 1){
             if (buff[counter2]== ' '){
                 addr_buff[counter1+1] = '\0';
@@ -64,8 +69,12 @@ void dest(char *buff, char *addr_buff){
 void arguments(int argc, char*argv[]) {
     if(argc < 5) {
         
+        //Finds current directory
         wwwp = getenv("PWD");
+        //sets path to folder with html files
         strcat(wwwp, "/pages");
+
+        //port is a bit random, could be anything
         port = 6789;
         if(argc == 2) {
             port = atoi(argv[1]);
@@ -74,6 +83,8 @@ void arguments(int argc, char*argv[]) {
         buffers = 50;
         int number_of_buffers = [MAXREQ];
     } else {
+
+        //translates values
         wwwp = argv[1];
         port = atoi(argv[2]);
         threads = atoi(argv[3]);
@@ -90,20 +101,26 @@ void *request() {
     int n;
     int newsockfd;
 
+
+    //create file
     FILE *file;
     while(1) {
+
+        //Get socket descriptor information
         newsockfd = bb_get(bb);
         int socket;
         if(newsockfd < 0){
             error("ERROR on accept");
         }
+
+        //Erase memory area
         bzero(buff, sizeof(buff));
         n = read(newsockfd, buff, sizeof(buff)-1);
         socket = n;
         if(n < 0){
             error("ERROR reading from socket");
         }
-        socket=0;
+        socket=1;
         snprintf(body, sizeof(body),
         "<html>\n<body>\n<h1>Hello web browser</h1>Your request was\n<pre>%s</pre>\n</body>\n</html>\n", buff);
 
@@ -111,18 +128,19 @@ void *request() {
         bzero(addr_buff, sizeof(addr_buff));
         dest(buff, addr_buff);
         
+        //Copy and concatenate www-path and address.
         strcpy(tot_addr, wwwp);
         strcat(tot_addr, addr_buff);
 
         char * f_buff = 0;
         long l;
         
-        
+        //Generate file path
         FILE * filepath = fopen (tot_addr, "r+");
         if (filepath == NULL ){
             strcpy(tot_addr, wwwp);
             strcat(tot_addr, "/error.html");
-            errorNum=1;
+            errorNum= 1;
             filepath = fopen (tot_addr, "rb");
             errorNum = 1;
         }
@@ -132,6 +150,7 @@ void *request() {
         fseek (filepath, 0, SEEK_END);
         l = ftell (filepath);
         fseek (filepath, 0, SEEK_SET);
+        //Allocated memory to the given filesize
         f_buff = malloc (l);
         if (f_buff)
             {
