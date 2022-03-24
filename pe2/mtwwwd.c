@@ -111,7 +111,6 @@ void *request() {
         if (filepath == NULL ){
             strcpy(tot_addr, wwwp);
             strcat(tot_addr, "/error.html");
-            printf("Response adress: %s \n", tot_addr);
             filepath = fopen (tot_addr, "rb");
             errorNum = 1;
         }
