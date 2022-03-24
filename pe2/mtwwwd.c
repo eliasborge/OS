@@ -12,11 +12,11 @@
 
 #define MAXREQ (4096*1024)
 
-char buffer[MAXREQ], body[MAXREQ], msg[MAXREQ];
-char *www_path;
+char buff[MAXREQ], body[MAXREQ], message[MAXREQ];
+char *wwwp;
 int port;
-int n_threads;
-int n_bufslots;
+int threads;
+int buffers;
 
 
 BNDBUF *bb;
@@ -26,28 +26,26 @@ void error(const char* msg){
     exit(1);
 }
 
-
-/* wtf is this magic */
-void get_destination(char *buffer, char *address_buffer){
+void dest(char *buff, char *addr_buff){
     int i = 0;
     int condition = 0;
     int j = 0;
     while(1){
-        if (buffer[j] == '\n' || buffer[j] == '\r'){
-            address_buffer[i+1] = '\0';
+        if (buff[j] == '\n' || buff[j] == '\r'){
+            addr_buff[i+1] = '\0';
             break;
         }
 
-        if(condition == 0 && buffer[j] == ' '){
+        if(condition == 0 && buff[j] == ' '){
             j++;
             condition = 1;
         }
         if(condition == 1){
-            if (buffer[j]== ' '){
-                address_buffer[i+1] = '\0';
+            if (buff[j]== ' '){
+                addr_buff[i+1] = '\0';
                 break;
             }
-            address_buffer[i] = buffer[j];
+            addr_buff[i] = buff[j];
             i++;
         }
         j++;
@@ -56,87 +54,88 @@ void get_destination(char *buffer, char *address_buffer){
     return;
 }
 
-void parse_args(int argc, char*argv[]) {
+void arguments(int argc, char*argv[]) {
     if(argc < 5) {
-        // Default args so i dont have to specify every time while programming
-        www_path = getenv("PWD");
-        strcat(www_path, "/www");
-        port = 8028;
+        
+        wwwp = getenv("PWD");
+        strcat(wwwp, "/pages");
+        port = 6789;
         if(argc == 2) {
             port = atoi(argv[1]);
         }
-        n_threads = 50;
-        n_bufslots = 50;
+        threads = 50;
+        buffers = 50;
     } else {
-        www_path = argv[1];
+        wwwp = argv[1];
         port = atoi(argv[2]);
-        n_threads = atoi(argv[3]);
-        n_bufslots = atoi(argv[4]);
+        threads = atoi(argv[3]);
+        buffers = atoi(argv[4]);
     }
 }
 
-void *handle_request() {
-    char address_buffer[256];
-    char total_adress[256];
-    int err_404 = 0;
+//For å håndtere requests som kommer
+void *request() {
+    char addr_buff[256];
+    char tot_addr[256];
+    int errorNum = 0;
     int n;
     int newsockfd;
 
-    FILE *content;
+    FILE *file;
     while(1) {
         newsockfd = bb_get(bb);
         if(newsockfd < 0){
             error("ERROR on accept");
         }
-        bzero(buffer, sizeof(buffer));
-        n = read(newsockfd, buffer, sizeof(buffer)-1);
+        bzero(buff, sizeof(buff));
+        n = read(newsockfd, buff, sizeof(buff)-1);
         
         if(n < 0){
             error("ERROR reading from socket");
         }
 
         snprintf(body, sizeof(body),
-        "<html>\n<body>\n<h1>Hello web browser</h1>Your request was\n<pre>%s</pre>\n</body>\n</html>\n", buffer);
+        "<html>\n<body>\n<h1>Hello web browser</h1>Your request was\n<pre>%s</pre>\n</body>\n</html>\n", buff);
 
-        bzero(address_buffer, sizeof(address_buffer));
-        get_destination(buffer, address_buffer);
+        bzero(addr_buff, sizeof(addr_buff));
+        dest(buff, addr_buff);
         
-        strcpy(total_adress, www_path);
-        strcat(total_adress, address_buffer);
+        strcpy(tot_addr, wwwp);
+        strcat(tot_addr, addr_buff);
     
-        char * file_buffer = 0;
-        long length;
+        char * f_buff = 0;
+        long l;
         
         
-        FILE * f = fopen (total_adress, "r+");
-        if (f == NULL ){
-            strcpy(total_adress, www_path);
-            strcat(total_adress, "/test.html");
-            printf("Response adress: %s \n", total_adress);
-            f = fopen (total_adress, "rb");
-            err_404 = 1;
+        FILE * filepath = fopen (tot_addr, "r+");
+        if (filepath == NULL ){
+            strcpy(tot_addr, wwwp);
+            strcat(tot_addr, "/error.html");
+            printf("Response adress: %s \n", tot_addr);
+            filepath = fopen (tot_addr, "rb");
+            errorNum = 1;
         }
-        err_404 = 0;
-        fseek (f, 0, SEEK_END);
-        length = ftell (f);
-        fseek (f, 0, SEEK_SET);
-        file_buffer = malloc (length);
-        if (file_buffer)
+        errorNum = 0;
+        fseek (filepath, 0, SEEK_END);
+        l = ftell (filepath);
+        fseek (filepath, 0, SEEK_SET);
+        f_buff = malloc (l);
+        if (f_buff)
             {
-                fread (file_buffer, 1, length, f);
+                fread (f_buff, 1, l, filepath);
             }
-        fclose (f);
+        fclose (filepath);
 
-        bzero(total_adress, sizeof(total_adress));
-        if(err_404 == 0) {
-            snprintf(msg, sizeof(msg),
-            "HTTP/1.0 200 OK\n Content-Type: text/html\n Content-Length: %lu\n\n%s", strlen(file_buffer), file_buffer);
+        bzero(tot_addr, sizeof(tot_addr));
+        if(errorNum == 0) {
+            snprintf(message, sizeof(message),
+            "HTTP/1.0 200 OK\n Content-Type: text/html\n Content-Length: %lu\n\n%s", strlen(f_buff), f_buff);
         } else {
-            snprintf(msg, sizeof(msg),
-            "HTTP/1.0 404 Not found\n Content-Type: text/html\n Content-Length: %lu\n\n%s", strlen(file_buffer), file_buffer);
+            snprintf(message, sizeof(message),
+            "HTTP/1.0 404 Not found\n Content-Type: text/html\n Content-Length: %lu\n\n%s", strlen(f_buff), f_buff);
         }
 
-        n = write(newsockfd, msg, strlen(msg));
+        n = write(newsockfd, message, strlen(message));
         
 
         if (n<0){
@@ -150,11 +149,11 @@ void *handle_request() {
 
 int main(int argc, char *argv[]){
     
-    parse_args(argc, argv);
+    arguments(argc, argv);
 
-    pthread_t threads[n_threads];
-    int temp_arg[n_threads];
-    bb = bb_init(n_bufslots);
+    pthread_t t[threads];
+    int temp_arg[threads];
+    bb = bb_init(buffers);
 
     int sockfd, newsockfd;
     socklen_t clilen;
@@ -169,17 +168,18 @@ int main(int argc, char *argv[]){
     if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0){
         error("ERROR on binding");
     }
-    for(int i = 0; i<n_threads;i++) {
+    //Loop that creates threads
+    int i = 0;
+    while(i<threads){
         temp_arg[i] = i;
-        int res = pthread_create(&threads[i], NULL, &handle_request, &temp_arg[i]);
+        int result = pthread_create(&t[i], NULL, &request, &temp_arg[i]);
+        i++;
     }
     listen(sockfd, 5);
-    int cccc = 0;
+    
     while(1){
         clilen = sizeof(cli_addr);
         newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
         bb_add(bb, newsockfd);
-        cccc+=1;
-        printf("%d\n",cccc);
     }
 }

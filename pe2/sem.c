@@ -5,42 +5,50 @@
 #include <stdio.h>
 
 typedef struct SEM {
-    int counter;
-    pthread_mutex_t mut;
-    pthread_cond_t cond;
+    int count;
+    pthread_mutex_t mutex;
+    pthread_cond_t conditional;
 } SEM;
 
 
 
-SEM *sem_init(int initVal) {
-    int n;
-    SEM *semaphore = malloc(sizeof(SEM));
+SEM *sem_init(int initialValue) {
+    int check_error;
 
-    semaphore->counter = initVal;
+    //Allocates the semaphore here
+    SEM *semPh = malloc(sizeof(SEM));
 
-    semaphore->mut = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
-    semaphore->cond = (pthread_cond_t)PTHREAD_COND_INITIALIZER;
+    //Checks semaphoure 
+    if(semPh == NULL){
+        return NULL;
+    }
 
-    n = pthread_mutex_init(&semaphore->mut, NULL);
+    semPh->count = initialValue;
+
+    semPh->mutex = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
+    semPh->conditional = (pthread_cond_t)PTHREAD_COND_INITIALIZER;
+
+    check_error = pthread_mutex_init(&semPh->mutex, NULL);
     
-    if(n != 0) {
-        free(semaphore);
+    if(check_error != 0) {
+        free(semPh);
         return NULL;
     }
-    n = pthread_cond_init(&semaphore->cond, NULL);
+    check_error = pthread_cond_init(&semPh->conditional, NULL);
 
-    if(n != 0){
-        pthread_mutex_destroy(&semaphore->mut);
-        free(semaphore);
+    // https://pubs.opengroup.org/onlinepubs/007904875/functions/pthread_mutex_destroy.html
+    if(check_error != 0){
+        pthread_mutex_destroy(&semPh->mutex);
+        free(semPh);
         return NULL;
     }
 
-    return semaphore;
+    return semPh;
 }
 
 int sem_del(SEM *sem){
     int n;
-    n = pthread_mutex_destroy(&sem->mut);
+    n = pthread_mutex_destroy(&sem->mutex);
     free(sem);
     return n;
 }
@@ -58,14 +66,14 @@ void wait(SEM *sem){
     *
     * sem           handle of the semaphore to decrement
     */
-    pthread_mutex_lock(&sem->mut);
-    while(sem->counter == 0){
-        pthread_cond_wait(&sem->cond, &sem->mut);
+    pthread_mutex_lock(&sem->mutex);
+    while(sem->count == 0){
+        pthread_cond_wait(&sem->conditional, &sem->mutex);
     }
 
-    sem->counter --;
+    sem->count --;
 
-    pthread_mutex_unlock(&sem->mut);
+    pthread_mutex_unlock(&sem->mutex);
     return;
 }
 
@@ -79,11 +87,12 @@ void signal(SEM *sem){
     *
     * sem           handle of the semaphore to increment
     */
-    pthread_mutex_lock(&sem->mut);
-    sem->counter ++;
-    if(sem->counter == 1 ) {
-        pthread_cond_signal(&sem->cond);
+    pthread_mutex_lock(&sem->mutex);
+    sem->count ++;
+    if(sem->count == 1 ) {
+        //Unlocks one of the threads
+        pthread_cond_signal(&sem->conditional);
     }
-    pthread_mutex_unlock(&sem->mut);
+    pthread_mutex_unlock(&sem->mutex);
     return;
 }
