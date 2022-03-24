@@ -112,6 +112,9 @@ void *request() {
         if(newsockfd < 0){
             error("ERROR on accept");
         }
+        else{
+            printf("Accept ok");
+        }
 
         //Erase memory area
         bzero(buff, sizeof(buff));
@@ -119,6 +122,9 @@ void *request() {
         socket = n;
         if(n < 0){
             error("ERROR reading from socket");
+        }
+        else{
+            printf("Reading from socket OK");
         }
         socket=1;
         snprintf(body, sizeof(body),
@@ -137,6 +143,8 @@ void *request() {
         
         //Generate file path
         FILE * filepath = fopen (tot_addr, "r+");
+
+        //Checks for filepath error. Sends to 404 page if so.
         if (filepath == NULL ){
             strcpy(tot_addr, wwwp);
             strcat(tot_addr, "/error.html");
