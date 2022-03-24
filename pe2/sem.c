@@ -93,7 +93,7 @@ int sem_del(SEM *sem){
     //destroy mutex (attempting)
     detecting_error = pthread_mutex_destroy(&sem->mutex);
     //destroy conditional (attempting)
-    detecting_error -= pthread_cond_destroy(&sem->mutex)
+    detecting_error -= pthread_cond_destroy(&sem->mutex);
     free(sem);
     return detecting_error;
 }

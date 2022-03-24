@@ -78,7 +78,7 @@ void arguments(int argc, char*argv[]) {
         port = atoi(argv[2]);
         threads = atoi(argv[3]);
         buffers = atoi(argv[4]);
-        int number_of_buffers = [MAXREQ];
+        int number_of_buffers =buffers;
     }
 }
 
