@@ -137,6 +137,8 @@ void *request() {
         
         //Generate file path
         FILE * filepath = fopen (tot_addr, "r+");
+
+        //Checks for filepath error. Sends to 404 page if so.
         if (filepath == NULL ){
             strcpy(tot_addr, wwwp);
             strcat(tot_addr, "/error.html");
