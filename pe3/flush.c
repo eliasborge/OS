@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+
 #define MAXIMUM_PATH_LENGTH 4096
 #define MAXIMUM_COMMAND_AMOUNT 64
 
@@ -93,4 +94,5 @@ int main()
     }
 
     return 1;
+
 }
