@@ -80,7 +80,7 @@ int main()
                     perror("Command too long");
                 }
 
-                splittedCommands[toknum] = token;
+                splittedCommands[toknum] = *token;
 
                 token = strtok(NULL, delimiters);
 
