@@ -11,15 +11,19 @@
 
 #define MAXIMUM_PATH_LENGTH 4096
 #define MAXIMUM_COMMAND_AMOUNT 64
+#define MAX_BUFFER_LENGTH 700
 
 char cwd[MAXIMUM_PATH_LENGTH];
 char r_d[MAXIMUM_PATH_LENGTH];
 
-// variables
+// variables // vet ikke om vi trenger disse
 const char SPACE = 0x20;
 const char TAB = 0x09;
 // This is not actually CTRL-D, but ctrl d shuts down in the wrong way. A simple d will turn off the application.
 const char CTRLD = 0x64;
+
+char *splittedCommands[MAX_BUFFER_LENGTH];
+char *mainCommand;
 
 void take_arguments()
 {
@@ -68,28 +72,31 @@ int main()
             // Split string on SPACE and TAB and send to different method.
             // src: https://riptutorial.com/c/example/2557/tokenisation--strtok----strtok-r---and-strtok-s--
             // Had to concat Tab onto space because i didnt know any other way.
-            char delimiters[2] = {SPACE, TAB};
-            char splittedCommands[MAXIMUM_COMMAND_AMOUNT];
-            char *token;
+            char delimiters[3] = {' ', '\t', '\0'};
             int toknum = 0;
-            token = strtok(&command, delimiters);
-            while (token != NULL)
-            {
-                //Inserting commands into an array
+            char *token = strtok(&command, delimiters);
+
+            //Lagrer hovedkommandoen i en egen variabel, samler resten i splittedCommands
+            mainCommand = token;
+
+            while(token != NULL) {
+
                 if(toknum > MAXIMUM_COMMAND_AMOUNT -1){
                     perror("Command too long");
                 }
 
-                splittedCommands[toknum] = *token;
-
                 token = strtok(NULL, delimiters);
-
+                splittedCommands[toknum] = token;
                 toknum++;
             }
-
             printf("Works");
-            //Unable to print array of tokens but i think it is good to go. 
-            //Create function that sends commands to executing function. 
+
+            //Sender deretter denne til take_arguments som utfører kommandoene
+            
+
+
+
+
         }
     }
 
