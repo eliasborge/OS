@@ -36,13 +36,16 @@ void take_arguments()
 
         //Sjekker at den det første som ligger i splittedCommands eksisterer
         if(splittedCommands[0] != NULL) {
-            
-            chdir(splittedCommands[0]);
+  
+            if(chdir(splittedCommands[0]) == -1) {
+                printf("No such file or directory");
+            }
         } else {
-            printf("%s", splittedCommands[0]);
+            printf("The path does not exist");
         }
     }
 
+    //For etterpå
     //https://www.delftstack.com/howto/c/execvp-in-c/#:~:text=Use%20execvp%20Function%20to%20Replace%20a%20Process%20Image%20in%20C,-In%20Unix%2Dbased&text=These%20functions%20take%20a%20file,arguments%20as%20the%20second%20argument
 
 }
@@ -73,8 +76,14 @@ int main()
     while (1)
     {
         print_current_working_directory();
-        char command;
-        scanf(" %s", &command);
+
+        char command[MAX_BUFFER_LENGTH];
+        fgets(&command, MAX_BUFFER_LENGTH, stdin);
+        fflush(stdin);
+
+        //Fjerner mellomrommet, ellers virker ikke cd// Dette er kok så vi må gjøre dette på en annen måte
+        command[strlen(command) - 1] = '\0';
+        
 
         int ascii = command;
         if (ascii == CTRLD)
