@@ -77,6 +77,8 @@ int main()
     {
         print_current_working_directory();
 
+        //Bruker fgets istedenfor scanf fordi scanf ikke er "buffersafe" (Se under)
+        //https://stackoverflow.com/questions/22065675/get-text-from-user-input-using-c
         char command[MAX_BUFFER_LENGTH];
         fgets(&command, MAX_BUFFER_LENGTH, stdin);
         fflush(stdin);
@@ -96,7 +98,6 @@ int main()
         {
             // Split string on SPACE and TAB and send to different method.
             // src: https://riptutorial.com/c/example/2557/tokenisation--strtok----strtok-r---and-strtok-s--
-            // Had to concat Tab onto space because i didnt know any other way.
             char delimiters[3] = {' ', '\t', '\0'};
             int toknum = 0;
             char *token = strtok(&command, delimiters);
@@ -114,8 +115,7 @@ int main()
                 toknum++;
             }
 
-            //Sender deretter denne til take_arguments som utfører kommandoene
-            
+            //Sender deretter denne til take_arguments som utfører alle kommandoene
             take_arguments();
 
 
