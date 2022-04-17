@@ -28,7 +28,6 @@ char *mainCommand;
 
 void print_current_working_directory()
 {
-
     if (getcwd(cwd, sizeof(cwd)) == NULL)
     {
         perror("Error while getting current working directory");
@@ -73,25 +72,32 @@ void execute_wait_operation() {
 
     if (child_pid == -1) {
         printf("Wrong!!!");
-        //exit(EXIT_FAILURE);
+        exit(EXIT_FAILURE);
     //In the childprocess
     } else if (child_pid == 0) {
 
+        //skal dette funke for echo???
         execvp(mainCommand, splittedCommands);
         //Må jeg har noe error under?
 
     } else if (child_pid > 0) {
+        //Parent process from YT video
+        wait(wait_status);
         if(waitpid(child_pid, &wait_status, 0) == -1) {
             printf("Perror: waitpid.\n");
             exit(EXIT_FAILURE);
         }
         if (WIFEXITED(wait_status)) {
             int statusCode = WEXITSTATUS(wait_status);
-            printf("Exit status [%s %s] = %d", mainCommand, splittedCommands[0], statusCode);
+            if (statusCode == 0) {
+                printf("\nExit status [%s %s] = %d", mainCommand, splittedCommands[0], statusCode);
+            } else {
+                printf("\nFailure with status code");
+            }
+    
 
         }
     }
-    
     
 }
 
