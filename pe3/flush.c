@@ -68,7 +68,7 @@ void execute_wait_operation() {
     // Må få til exit status 
 
     pid_t child_pid = fork();
-    int wait_status;
+    
 
     if (child_pid == -1) {
         printf("Wrong!!!");
@@ -76,28 +76,37 @@ void execute_wait_operation() {
     //In the childprocess
     } else if (child_pid == 0) {
 
-        //skal dette funke for echo???
-        execvp(mainCommand, splittedCommands);
-        //Må jeg har noe error under?
+        if (execvp(mainCommand, splittedCommands) == -1) {
+            perror("execvp");
+        }
+        exit(0);
+
 
     } else if (child_pid > 0) {
-        //Parent process from YT video
-        wait(wait_status);
-        if(waitpid(child_pid, &wait_status, 0) == -1) {
-            printf("Perror: waitpid.\n");
-            exit(EXIT_FAILURE);
-        }
-        if (WIFEXITED(wait_status)) {
-            int statusCode = WEXITSTATUS(wait_status);
-            if (statusCode == 0) {
-                printf("\nExit status [%s %s] = %d", mainCommand, splittedCommands[0], statusCode);
-            } else {
-                printf("\nFailure with status code");
-            }
-    
-
-        }
+        int wait_status;
+        waitpid(child_pid, &wait_status, WUNTRACED);
+        printf("\nExit status [%s %s] = %d", mainCommand, splittedCommands[0], wait_status);
     }
+
+    /*
+    Dette skal egnt være her men skjønner ikke hvorfor det ikke funker
+    //Parent process from YT video
+    //wait(wait_status);
+    if(waitpid(child_pid, &wait_status, WUNTRACED) == -1) {
+        printf("Perror: waitpid.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (WIFEXITED(wait_status)) {
+        int statusCode = WEXITSTATUS(wait_status);
+        if (statusCode == 0) {
+            printf("\nExit status [%s %s] = %d", mainCommand, splittedCommands[0], statusCode);
+    } else {
+        printf("\nFailure with status code");
+
+    }
+}
+    */
     
 }
 
