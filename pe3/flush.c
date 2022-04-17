@@ -64,9 +64,34 @@ void take_arguments()
 
 void execute_wait_operation() {
 
-    //https://www.delftstack.com/howto/c/execvp-in-c/#:~:text=Use%20execvp%20Function%20to%20Replace%20a%20Process%20Image%20in%20C,-In%20Unix%2Dbased&text=These%20functions%20take%20a%20file,arguments%20as%20the%20second%20argument
+    // Source: https://www.youtube.com/watch?v=DiNmwwQWl0g
+    // Source: https://www.delftstack.com/howto/c/execvp-in-c/#:~:text=Use%20execvp%20Function%20to%20Replace%20a%20Process%20Image%20in%20C,-In%20Unix%2Dbased&text=These%20functions%20take%20a%20file,arguments%20as%20the%20second%20argument
     // Må få til exit status 
 
+    pid_t child_pid = fork();
+    int wait_status;
+
+    if (child_pid == -1) {
+        printf("Wrong!!!");
+        //exit(EXIT_FAILURE);
+    //In the childprocess
+    } else if (child_pid == 0) {
+
+        execvp(mainCommand, splittedCommands);
+        //Må jeg har noe error under?
+
+    } else if (child_pid > 0) {
+        if(waitpid(child_pid, &wait_status, 0) == -1) {
+            printf("Perror: waitpid.\n");
+            exit(EXIT_FAILURE);
+        }
+        if (WIFEXITED(wait_status)) {
+            int statusCode = WEXITSTATUS(wait_status);
+            printf("Exit status [%s %s] = %d", mainCommand, splittedCommands[0], statusCode);
+
+        }
+    }
+    
     
 }
 
@@ -123,6 +148,7 @@ int main()
 
             //Sender deretter denne til take_arguments som utfører alle kommandoene
             take_arguments();
+            execute_wait_operation();
 
 
 
