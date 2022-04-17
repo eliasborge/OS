@@ -26,6 +26,20 @@ const char CTRLD = 0x64;
 char *splittedCommands[MAX_BUFFER_LENGTH];
 char *mainCommand;
 
+void print_current_working_directory()
+{
+
+    if (getcwd(cwd, sizeof(cwd)) == NULL)
+    {
+        perror("Error while getting current working directory");
+    }
+    else
+    {
+        printf("\n");
+        printf("%s:", cwd);
+    }
+}
+
 void take_arguments()
 {
     // Implement method for reading the input string. Splitting on SPACE or TAB and then call method for
@@ -45,23 +59,15 @@ void take_arguments()
         }
     }
 
-    //For etterpå
-    //https://www.delftstack.com/howto/c/execvp-in-c/#:~:text=Use%20execvp%20Function%20to%20Replace%20a%20Process%20Image%20in%20C,-In%20Unix%2Dbased&text=These%20functions%20take%20a%20file,arguments%20as%20the%20second%20argument
 
 }
 
-void print_current_working_directory()
-{
+void execute_wait_operation() {
 
-    if (getcwd(cwd, sizeof(cwd)) == NULL)
-    {
-        perror("Error while getting current working directory");
-    }
-    else
-    {
-        printf("\n");
-        printf("%s:", cwd);
-    }
+    //https://www.delftstack.com/howto/c/execvp-in-c/#:~:text=Use%20execvp%20Function%20to%20Replace%20a%20Process%20Image%20in%20C,-In%20Unix%2Dbased&text=These%20functions%20take%20a%20file,arguments%20as%20the%20second%20argument
+    // Må få til exit status 
+
+    
 }
 
 int main()
@@ -86,7 +92,7 @@ int main()
         //Fjerner mellomrommet, ellers virker ikke cd// Dette er kok så vi må gjøre dette på en annen måte
         command[strlen(command) - 1] = '\0';
         
-
+        //Er noen warnings her som jeg ikke vet hvor kommer fra
         int ascii = command;
         if (ascii == CTRLD)
         {
