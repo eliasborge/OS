@@ -51,7 +51,7 @@ void take_arguments()
         if(splittedCommands[1] != NULL) {
   
             if(chdir(splittedCommands[1]) == -1) {
-                printf("No such file or directory");
+                printf("No such file or directoryyyyyy");
             }
         } else {
             printf("The path does not exist");
@@ -92,12 +92,8 @@ void execute_wait_operation() {
 
         if (WIFEXITED(wait_status)) {
             int statusCode = WEXITSTATUS(wait_status);
-            if (statusCode == 0) {
-                printf("\nExit status [%s %s] = %d", mainCommand, splittedCommands[1], statusCode);
-        } else {
-            printf("\nFailure with status code");
-
-        }
+            printf("\nExit status [%s %s] = %d", mainCommand, splittedCommands[1], statusCode);
+        
 }
     }
 }
@@ -157,15 +153,17 @@ int main()
 
             //Hvis det ikke er noen kommandoer i det hele tatt
             //Betyr at man i teorien kan skrive enter så litt feil
-            if(splittedCommands[0] == NULL && mainCommand == NULL) {
+            if(mainCommand == NULL || strstr(mainCommand, "0")) {
                 printf("exiting flush");
-                break;
+                return 0;
+            } else {
+                take_arguments();
+                execute_wait_operation();
             }
 
-            //Sender deretter denne til take_arguments som utfører alle kommandoene
-            take_arguments();
-            execute_wait_operation();
-
+            //reset
+            memset(splittedCommands, 0, MAX_BUFFER_LENGTH * sizeof(splittedCommands[0]));
+            mainCommand = NULL;
 
 
         }
