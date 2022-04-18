@@ -35,7 +35,7 @@ void print_current_working_directory()
     else
     {
         printf("\n");
-        printf("%s:", cwd);
+        printf("%s: ", cwd);
     }
 }
 
@@ -48,9 +48,9 @@ void take_arguments()
     if(strcmp(mainCommand, "cd") == 0){
 
         //Sjekker at den det første som ligger i splittedCommands eksisterer
-        if(splittedCommands[0] != NULL) {
+        if(splittedCommands[1] != NULL) {
   
-            if(chdir(splittedCommands[0]) == -1) {
+            if(chdir(splittedCommands[1]) == -1) {
                 printf("No such file or directory");
             }
         } else {
@@ -65,14 +65,14 @@ void execute_wait_operation() {
 
     // Source: https://www.youtube.com/watch?v=DiNmwwQWl0g
     // Source: https://www.delftstack.com/howto/c/execvp-in-c/#:~:text=Use%20execvp%20Function%20to%20Replace%20a%20Process%20Image%20in%20C,-In%20Unix%2Dbased&text=These%20functions%20take%20a%20file,arguments%20as%20the%20second%20argument
-    // Må få til exit status 
 
     pid_t child_pid = fork();
-    
+    int wait_status;
 
     if (child_pid == -1) {
         printf("Wrong!!!");
         exit(EXIT_FAILURE);
+
     //In the childprocess
     } else if (child_pid == 0) {
 
@@ -83,31 +83,23 @@ void execute_wait_operation() {
 
 
     } else if (child_pid > 0) {
-        int wait_status;
-        waitpid(child_pid, &wait_status, WUNTRACED);
-        printf("\nExit status [%s %s] = %d", mainCommand, splittedCommands[0], wait_status);
-    }
-
-    /*
-    Dette skal egnt være her men skjønner ikke hvorfor det ikke funker
-    //Parent process from YT video
+        //Parent process from YT video
     //wait(wait_status);
-    if(waitpid(child_pid, &wait_status, WUNTRACED) == -1) {
-        printf("Perror: waitpid.\n");
-        exit(EXIT_FAILURE);
-    }
+        if(waitpid(child_pid, &wait_status, WUNTRACED) == -1) {
+            printf("Perror: waitpid.\n");
+            exit(EXIT_FAILURE);
+        }
 
-    if (WIFEXITED(wait_status)) {
-        int statusCode = WEXITSTATUS(wait_status);
-        if (statusCode == 0) {
-            printf("\nExit status [%s %s] = %d", mainCommand, splittedCommands[0], statusCode);
-    } else {
-        printf("\nFailure with status code");
+        if (WIFEXITED(wait_status)) {
+            int statusCode = WEXITSTATUS(wait_status);
+            if (statusCode == 0) {
+                printf("\nExit status [%s %s] = %d", mainCommand, splittedCommands[1], statusCode);
+        } else {
+            printf("\nFailure with status code");
 
-    }
+        }
 }
-    */
-    
+    }
 }
 
 int main()
@@ -150,6 +142,8 @@ int main()
 
             //Lagrer hovedkommandoen i en egen variabel, samler resten i splittedCommands
             mainCommand = token;
+            //Måtte legge til den første og ellers funker ikke execvp
+            splittedCommands[toknum] = mainCommand;
 
             while(token != NULL) {
 
@@ -157,8 +151,15 @@ int main()
                     perror("Command too long");
                 }
                 token = strtok(NULL, delimiters);
-                splittedCommands[toknum] = token;
+                splittedCommands[toknum+1] = token;
                 toknum++;
+            } 
+
+            //Hvis det ikke er noen kommandoer i det hele tatt
+            //Betyr at man i teorien kan skrive enter så litt feil
+            if(splittedCommands[0] == NULL && mainCommand == NULL) {
+                printf("exiting flush");
+                break;
             }
 
             //Sender deretter denne til take_arguments som utfører alle kommandoene
