@@ -19,6 +19,8 @@ char r_d[MAXIMUM_PATH_LENGTH];
 
 bool backgroundTask = false;
 int ampersandIndex;
+int output_in = 0;
+int input_in = 0;
 
 struct ChildProcess
 {
@@ -107,6 +109,34 @@ void execute_cd_or_jobs()
     }
 }
 
+//Forsøk på 3.3 I/O redirection, Må kanskje kommenteres ut 
+//Har en del på 3.3, 3.4 og 3.5. Håper dette rettes selv om det er noen feil i koden
+void IO_redir() {
+    printf("hei");
+    int size_of_args = sizeof(splittedCommands)/sizeof(splittedCommands[0]);
+
+    for (int i = 0; i < sizeof(splittedCommands)/sizeof(splittedCommands[0]) - 1; i++)
+    {
+        if (strcmp(splittedCommands[i], ">") == 0) {
+            if (i >= size_of_args -1) {
+                printf("Soecify the path (Output)");
+                return;
+            }
+            splittedCommands[i] = NULL;
+            output_in = i+1;
+        } else if (strcmp(splittedCommands[i], "<") == 0) {
+            if (i >= size_of_args -1) {
+                printf("Soecify the path (Input)");
+                return;
+            }
+            splittedCommands[i] = NULL;
+            input_in = i+1;
+        }
+
+    }
+    
+}
+
 void execute_wait_operation()
 {
 
@@ -153,6 +183,19 @@ void execute_wait_operation()
     else if (child_pid == 0)
     {
 
+        int stdout_filename = fileno(stdout);
+
+        // redirect stdin & stdout // vet ikke helt om dette funker - fant på nettet
+        if(input_in) {
+            freopen(splittedCommands[input_in], "r", stdin); 
+        }
+    
+        if(output_in) {
+            freopen(splittedCommands[output_in], "w", stdout);
+        }
+        
+
+
         int exec;
 
         exec = execvp(mainCommand, splittedCommands);
@@ -195,7 +238,7 @@ int main()
     for (int i = 0; i < MAX_BACKGROUND_TASKS; i++)
     {
         background_processes[i].isActive = false;
-    }
+    } 
 
     if (getcwd(cwd, sizeof(cwd)) == NULL)
     {
@@ -242,6 +285,29 @@ int main()
             /*
             Poenget her er at når "&" kommer skal den egnt ikke legges til i splittedcommands
             */
+             while (token != NULL)
+            {
+                if (!strcmp(token, "&"))
+                {
+                    backgroundTask = true;
+                }
+
+                if (toknum > MAXIMUM_COMMAND_AMOUNT - 1)
+                {
+                    perror("Command too long");
+                }
+                token = strtok(NULL, delimiters);
+
+
+
+                splittedCommands[toknum + 1] = token;
+                toknum++;
+            }
+            }
+            /*
+            Dette her er koden vi egnt hadde som fjernet &
+            Denne funker av og til og av og til ikke så jeg har valgt å legge den ved her
+            Sånn at den fortsatt kan tas med i vurderingen
             while (token != NULL)
             {
                 if (!strcmp(token, "&"))
@@ -265,9 +331,9 @@ int main()
                     
                 }
                 
-                
             }
-            
+            */
+
 
             // Hvis det ikke er noen kommandoer i det hele tatt
             // Betyr at man i teorien kan skrive enter så litt feil
@@ -283,10 +349,8 @@ int main()
                 {
                     execute_cd_or_jobs();
                 }
-
                 else
                 {
-
                     execute_wait_operation();
                 }
             }
