@@ -231,17 +231,25 @@ int main()
             char delimiters[3] = {' ', '\t', '\0'};
             int toknum = 0;
             char *token = strtok(&command, delimiters);
+            int check_amperstrand = 0;
 
             // Lagrer hovedkommandoen i en egen variabel, samler resten i splittedCommands
             mainCommand = token;
             // Måtte legge til den første og ellers funker ikke execvp
             splittedCommands[toknum] = mainCommand;
 
+
+            /*
+            Poenget her er at når "&" kommer skal den egnt ikke legges til i splittedcommands
+            */
             while (token != NULL)
             {
                 if (!strcmp(token, "&"))
                 {
-                    backgroundTask = true;
+                    printf("den ble oppdatert");
+                    check_amperstrand ++;
+                    backgroundTask = true; 
+                    
                 }
 
                 if (toknum > MAXIMUM_COMMAND_AMOUNT - 1)
@@ -250,11 +258,17 @@ int main()
                 }
                 token = strtok(NULL, delimiters);
 
+                if(check_amperstrand == 0) {
+                    if (strcmp(token, "&")) {
+                        splittedCommands[toknum + 1] = token;
+                        toknum++;
+                    }
+                    
+                }
                 
-
-                splittedCommands[toknum + 1] = token;
-                toknum++;
+                
             }
+            
 
             // Hvis det ikke er noen kommandoer i det hele tatt
             // Betyr at man i teorien kan skrive enter så litt feil
