@@ -23,7 +23,7 @@ int ampersandIndex;
 struct ChildProcess
 {
     pid_t pid;
-    char main[20];
+    char main;
     bool isActive;
     char extraCommands[MAX_BUFFER_LENGTH];
 };
@@ -38,7 +38,7 @@ const char CTRLD = 0x04;
 
 // Lagret disse globalt sånn at man lettere kunne nå de gjennom forskjellige funksjone
 char *splittedCommands[MAX_BUFFER_LENGTH];
-char *mainCommand[20];
+char *mainCommand;
 
 void print_current_working_directory()
 {
@@ -85,12 +85,11 @@ void jobs()
         // If process is inactive, continue to next.
         if (!cp.isActive)
         {
-            
+
             continue;
         }
-            
-            printf("\n %d: %s", cp.pid, cp.main);
-        
+
+        printf("\n %d: %s", cp.pid, cp.main);
     }
 }
 
@@ -121,7 +120,7 @@ void execute_wait_operation()
     // Lagrer informasjon om prosessen.
     struct ChildProcess currentProcess;
     currentProcess.pid = child_pid;
-    strcpy(currentProcess.main,mainCommand);
+    currentProcess.main = mainCommand;
     currentProcess.isActive = true;
     // måtte lage loop. Klarte ikke sette hele arrayet på en linje.
     for (int i = 0; i < sizeof(currentProcess.extraCommands); i++)
@@ -178,14 +177,14 @@ void execute_wait_operation()
         {
             int statusCode = WEXITSTATUS(wait_status);
             printf("\nExit status [%s %s] = %d", mainCommand, splittedCommands[1], statusCode);
-            //Catch the zombies. After process is finished, remove its boolean value and it wont appear for user. 
+            // Catch the zombies. After process is finished, remove its boolean value and it wont appear for user.
             for (int i = 0; i < 32; i++)
             {
-                if(background_processes[i].pid == child_pid){
+                if (background_processes[i].pid == child_pid)
+                {
                     background_processes[i].isActive = false;
                 }
             }
-            
         }
     }
 }
@@ -234,12 +233,16 @@ int main()
             char *token = strtok(&command, delimiters);
 
             // Lagrer hovedkommandoen i en egen variabel, samler resten i splittedCommands
-            strcpy(mainCommand,token);
+            mainCommand = token;
             // Måtte legge til den første og ellers funker ikke execvp
             splittedCommands[toknum] = mainCommand;
 
             while (token != NULL)
             {
+                if (!strcmp(token, "&"))
+                {
+                    backgroundTask = true;
+                }
 
                 if (toknum > MAXIMUM_COMMAND_AMOUNT - 1)
                 {
@@ -247,25 +250,10 @@ int main()
                 }
                 token = strtok(NULL, delimiters);
 
+                
+
                 splittedCommands[toknum + 1] = token;
                 toknum++;
-            }
-            // Må sjekke om det skal være en background process.
-            if (splittedCommands[strlen(splittedCommands) - 1] == '&')
-            {
-
-                backgroundTask = true;
-
-                for (int i = 0; i < MAX_BUFFER_LENGTH; i++)
-                {
-                    char *ret = strstr(splittedCommands[i], "&");
-                    if (ret)
-                    {
-                        splittedCommands[i] = "";
-                    }
-                }
-
-                printf("BG");
             }
 
             // Hvis det ikke er noen kommandoer i det hele tatt
@@ -292,7 +280,7 @@ int main()
 
             // reset
             memset(splittedCommands, 0, MAX_BUFFER_LENGTH * sizeof(splittedCommands[0]));
-            //mainCommand = "\0";
+            // mainCommand = "\0";
         }
     }
 
