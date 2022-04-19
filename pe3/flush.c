@@ -246,7 +246,6 @@ int main()
             {
                 if (!strcmp(token, "&"))
                 {
-                    printf("den ble oppdatert");
                     check_amperstrand ++;
                     backgroundTask = true; 
                     
